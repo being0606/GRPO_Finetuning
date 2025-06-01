@@ -1,0 +1,7 @@
+tensorboard
+torch
+torchvision
+torchaudio
+transformers
+trl
+accelerate
