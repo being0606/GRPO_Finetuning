@@ -65,7 +65,7 @@ http://localhost:6006/
 - `logs/` folder: TensorBoard event files and training logs
 
 ## References
-- GRPO original paper: https://arxiv.org/abs/XXXX.XXXXX  
+- GRPO original paper: [https://arxiv.org/pdf/2402.03300](https://arxiv.org/pdf/2402.03300)
 - Hugging Face TRL: https://github.com/huggingface/trl
 - PyTorch FSDP: https://pytorch.org/docs/stable/fsdp.html
 
