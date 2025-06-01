@@ -6,6 +6,7 @@ import os
 from datasets import load_dataset
 from transformers import AutoTokenizer, TrainerCallback
 from trl import GRPOTrainer, GRPOConfig
+from torch.utils.tensorboard import SummaryWriter
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train Llama2-7B with GRPO via Accelerate+FSDP")
@@ -28,15 +29,30 @@ def parse_args():
     return parser.parse_args()
 
 # Logging 콜백 정의
-class BatchLogCallback(TrainerCallback):
+class TensorBoardCallback(TrainerCallback):
+    def __init__(self, log_dir):
+        rank = int(os.environ.get("RANK", 0))
+        if rank == 0:
+            self.writer = SummaryWriter(log_dir)
+        else:
+            self.writer = None
+
     def on_step_end(self, args, state, control, **kwargs):
-        # Accelerate 환경에서는 RANK 환경변수로 프로세스 인덱스를 확인
         rank = int(os.environ.get("RANK", 0))
         if rank != 0:
             return
         if state.log_history:
             last = state.log_history[-1]
-            logging.info(f"Step {state.global_step} | Loss: {last.get('loss','n/a')}")
+            logging.info(f"Step {state.global_step} | Loss: {last.get('loss','n/a')} | Learning Rate: {last.get('learning_rate','n/a')} | Batch Size: {args.per_device_train_batch_size}")
+            logging.info(f"Current Batch: {last.get('current_batch','n/a')} | Group Size: {args.num_generations}")
+            if self.writer is not None:
+                for key, value in last.items():
+                    if isinstance(value, (int, float)):
+                        self.writer.add_scalar(key, value, state.global_step)
+
+    def on_train_end(self, args, state, control, **kwargs):
+        if self.writer is not None:
+            self.writer.close()
             
 # GRPO 보상 함수 정의 TODO: 실제 작업에 맞는 보상 함수를 구현해야 합니다.
 def reward_len(completions, **kwargs):
@@ -84,13 +100,11 @@ def main():
         args=grpo_args,
         train_dataset=train_dataset,
         reward_funcs=reward_len,
-        callbacks=[BatchLogCallback()],
+        callbacks=[TensorBoardCallback(args.logging_dir)],
     )
 
     # 5) 학습 시작
     trainer.train()
-    
-    # 6)  TODO:모델 저장 **특정한 체크포인트(예: 가장 낮은 validation loss)에서 저장
 
 if __name__ == "__main__":
     main()
