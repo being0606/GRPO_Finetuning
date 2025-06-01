@@ -10,7 +10,8 @@ It leverages FSDP distributed training and Accelerate to overcome GPU memory lim
 - PyTorch 2.1.x  
 - Hugging Face Transformers 4.37.x  
 - TRL 0.7.x  
-- Accelerate 0.28.x  
+- Accelerate 0.28.x
+- GPU: A6000 x 4 (ours)
 
 ## Installation
 ```bash
