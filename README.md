@@ -1,4 +1,4 @@
-# GRPO_Finetuning via GRPO
+# Finetuning via GRPO
 
 ## Overview
 This project demonstrates fine-tuning the Llama2-7B model using the GRPO algorithm.  
